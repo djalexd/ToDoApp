@@ -18,4 +18,6 @@ class Task {
     private long id;
     @Column
     private String message;
+    // TODO solve the mapping
+    private User assignee;
 }
