@@ -2,7 +2,6 @@ package com.example;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,9 +23,9 @@ public class TaskEndpoint {
     @RequestMapping(path = "/create-task", method = RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public void doCreateTask(
             final @RequestParam(value = "message") String contents,
-            HttpServletResponse response) {
+            HttpServletResponse response) throws Exception {
 
-        TaskService.Task task = new TaskService.Task();
+        Task task = new Task();
         task.setMessage(contents);
         taskService.create(task);
 
@@ -34,7 +33,7 @@ public class TaskEndpoint {
     }
 
     @RequestMapping(path = "/list-tasks", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<TaskService.Task> listTasks() {
+    public List<Task> listTasks() {
         return taskService.list();
     }
 }
