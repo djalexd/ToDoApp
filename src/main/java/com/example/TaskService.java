@@ -15,6 +15,9 @@ import java.util.Map;
 @Component
 public class TaskService {
 
+    /**
+     * { "id": 3, "message": "bla bla bla" }
+     */
     @Data
     static class Task {
         private long id;
