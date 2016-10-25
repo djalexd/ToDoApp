@@ -2,10 +2,7 @@ package com.example;
 
 import lombok.Data;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 /**
  * JPA entity
@@ -19,5 +16,7 @@ class Task {
     @Column
     private String message;
     // TODO solve the mapping
+
+    @ManyToOne
     private User assignee;
 }
