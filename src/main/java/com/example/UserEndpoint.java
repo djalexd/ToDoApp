@@ -33,4 +33,9 @@ public class UserEndpoint {
     public List<User> listUsers() {
         return userService.list();
     }
+
+    @RequestMapping(path = "/get-user", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public User getUser(final @RequestParam(value = "userName") String userName) {
+        return userService.findByUserName(userName);
+    }
 }

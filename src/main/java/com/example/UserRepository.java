@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long>{
     // not extra functionality added for the moment. Do I need any? Do I need this interface?
+    User findByUserName(String userName);
 }

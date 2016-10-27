@@ -23,6 +23,8 @@ public class UserService {
         return userRepository.findAll();
     }
 
+    User findByUserName(String userName) { return userRepository.findByUserName(userName); }
+
     void delete(final long userId){
 
     }
