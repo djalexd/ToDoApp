@@ -4,6 +4,8 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import java.util.List;
 
 /**
@@ -15,6 +17,8 @@ public class TaskService {
 
     @Autowired
     private TaskRepository taskRepository;
+    @Autowired
+    private EntityManager em;
 
     void create(Task newTask) throws Exception {
         // begin java transaction api (jta)
@@ -40,7 +44,20 @@ public class TaskService {
         return taskRepository.findAll();
     }
 
-    void update(final long taskToUpdateId, final Task updateTask) {}
+    Task getTaskById(Long taskId){
+        return taskRepository.findById(taskId);
+    }
 
-    void delete(final long taskToDeleteId) {}
+    void update(final long taskToUpdateId, final Task updateTask) {
+        TypedQuery<Task> q = em.createQuery("update t from Task t set t.message=:message, t.assignee=:assignee " +
+                "where t.id = ?3", Task.class);
+        q.setParameter("message", updateTask.getMessage());
+        q.setParameter("assignee", updateTask.getAssignee());
+        q.setParameter(3, taskToUpdateId);
+        q.executeUpdate();
+    }
+
+    void delete(final long taskToDeleteId) {
+        taskRepository.delete(taskToDeleteId);
+    }
 }

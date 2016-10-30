@@ -15,8 +15,10 @@ class Task {
     private long id;
     @Column
     private String message;
-    // TODO solve the mapping
 
     @ManyToOne
     private User assignee;
+
+    @ManyToOne
+    private User author;
 }

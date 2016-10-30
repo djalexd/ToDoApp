@@ -13,4 +13,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     //rng data
     // @Query("select Task t where t.assignee = :u")
     Page<Task> findByAssignee(User u, Pageable pagingInfo);
+    Task findById(Long taskId);
+    void delete(Long taskId);
 }
