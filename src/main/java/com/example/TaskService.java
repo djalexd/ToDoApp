@@ -2,9 +2,19 @@ package com.example;
 
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.TypedQuery;
 import java.util.List;
 
@@ -16,39 +26,53 @@ import java.util.List;
 public class TaskService {
 
     @Autowired
+    private PlatformTransactionManager ptm;
+    @Autowired
     private TaskRepository taskRepository;
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private EntityManager em;
+    //@Autowired
+    //TransactionManager tm; // not possible to inject this here..
 
-    void create(Task newTask) throws Exception {
+    /**
+     * Creates a new task with current authenticated user.
+     */
+    public Task create(Long ownerId, String message) throws Exception {
+        User owner = userRepository.findOne(ownerId);
+
+        TransactionStatus status = ptm.getTransaction(new DefaultTransactionDefinition());
         // begin java transaction api (jta)
-//        tm.
-//        try {
-//            // persist jpa entity
-//            em.persist(newTask);
-//            // commit transaction
-//            tm.commit();
-//        } catch (RuntimeException e) {
-//            // for any exceptions, rollback (don't store data)
-//            tm.rollback();
-//        }
-        taskRepository.save(newTask);
+        //EntityTransaction tx = em.getTransaction();
+        //tx.begin();
+        try{
+            Task newTask = new Task();
+            newTask.setAuthor(owner);
+            newTask.setMessage(message);
+            newTask.setAssignee(owner);
+            // persist JPA entity
+            em.persist(newTask);
+            // commit tx
+            //tx.commit();
+            ptm.commit(status);
+            return newTask;
+        } catch (RuntimeException ex) {
+            ptm.rollback(status);
+            //tx.rollback();
+            throw ex;
+        }
     }
 
-    List<Task> list() {
-//        CriteriaBuilder cb = em.getCriteriaBuilder();
-//        CriteriaQuery<Task> criteria = cb.createQuery( Task.class );
-//        Root<Task> taskRoot = criteria.from( Task.class );
-//        criteria.select( taskRoot );
-//        return em.createQuery(criteria).getResultList();
+    public List<Task> list() {
         return taskRepository.findAll();
     }
 
-    Task getTaskById(Long taskId){
+    public Task getTaskById(Long taskId){
         return taskRepository.findById(taskId);
     }
 
-    void update(final long taskToUpdateId, final Task updateTask) {
+    public void update(final long taskToUpdateId, final Task updateTask) {
         TypedQuery<Task> q = em.createQuery("update t from Task t set t.message=:message, t.assignee=:assignee " +
                 "where t.id = ?3", Task.class);
         q.setParameter("message", updateTask.getMessage());
@@ -57,7 +81,11 @@ public class TaskService {
         q.executeUpdate();
     }
 
-    void delete(final long taskToDeleteId) {
-        taskRepository.delete(taskToDeleteId);
+    @Transactional
+    @PreAuthorize("isAuthenticated() and mySecurity.isTaskCreator(#id)")
+    public void delete(final long id) {
+        final Task existing = taskRepository.findOne(id);
+        // TODO what happens if 'existing' does not exist??
+        taskRepository.delete(id);
     }
 }

@@ -19,38 +19,43 @@ import javax.naming.AuthenticationException;
 @Transactional
 @ActiveProfiles({ "in_memory" })
 public class UserServiceTest {
+    public static final String TEST_USR_NAME = "demo";
+    public static final String TEST_PASS = "password";
+    public static final String EXPECT_TO_FIND_USER_BY_NAME = "Expect to find user by name ";
+    public static final String EXPECTED_NO_USER_TO_BE_LOGGED_IN = "Expected no user to be logged in!";
+    public static final String LOGIN_FAILED = "Login failed!";
+    public static final String LOGOUT_PERFORMED_UNSUCCESSFULLY = "Logout performed unsuccessfully!";
+
     @Autowired
     private UserService userService;
 
     @Before
     public void createUserBeforeTest() {
-        userService.create(new User("demo", "password"));
+        userService.create(new User(TEST_USR_NAME, TEST_PASS));
     }
 
     @Test
     public void testFindUserBySpringRepository() {
-        Assert.assertNotNull("expect to find user by name 'demo'", userService.findByUserName("demo"));
+        Assert.assertNotNull(EXPECT_TO_FIND_USER_BY_NAME + TEST_USR_NAME, userService.findByUserName(TEST_USR_NAME));
     }
 
     @Test
     public void testFindUserByEntityManager() {
-        Assert.assertNotNull("expect to find user by name 'demo'", userService.findByUserNameEM("demo"));
+        Assert.assertNotNull(EXPECT_TO_FIND_USER_BY_NAME + TEST_USR_NAME, userService.findByUserNameEM(TEST_USR_NAME));
     }
 
     @Test
     public void testLoginLogout(){
-        User userToAuthenticate = new User("demo", "password");
-        Assert.assertEquals("Expected no user to be logged in!", null, UserService.getSession().getAttribute(Constants.CURRENT_USER));
+        Assert.assertEquals(EXPECTED_NO_USER_TO_BE_LOGGED_IN, null, userService.getSession().getAttribute(Constants.CURRENT_USER));
 
         try {
-            userService.login(userToAuthenticate);
-            Assert.assertEquals("Logged in user is not the desired one!", userToAuthenticate, UserService.getSession().getAttribute("CURRENT_USER"));
+            userService.login(TEST_USR_NAME, TEST_PASS);
         } catch (AuthenticationException e) {
-            Assert.fail("Login failed!");
+            Assert.fail(LOGIN_FAILED);
             e.printStackTrace();
         }
 
         userService.logout();
-        Assert.assertEquals("Logout performed unsuccessfully!", null, UserService.getSession().getAttribute(Constants.CURRENT_USER));
+        Assert.assertEquals(LOGOUT_PERFORMED_UNSUCCESSFULLY, null, userService.getSession().getAttribute(Constants.CURRENT_USER));
     }
 }

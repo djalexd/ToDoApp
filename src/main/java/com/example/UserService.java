@@ -16,7 +16,6 @@ import java.util.jar.Pack200;
 /**
  * Manages the lifecycle of users
  */
-//. Don't know if it is useful here
 @Component
 public class UserService {
     @Autowired
@@ -24,15 +23,15 @@ public class UserService {
     @Autowired
     private EntityManager em;
 
-    void create(User newUser){
+    public void create(User newUser){
         userRepository.save(newUser);
     }
 
-    List<User> list(){
+    public List<User> list(){
         return userRepository.findAll();
     }
 
-    User findByUserName(String userName) { return userRepository.findByUserName(userName); }
+    public User findByUserName(String userName) { return userRepository.findByUserName(userName); }
 
     void delete(final long userId){
 
@@ -45,24 +44,23 @@ public class UserService {
     }
 
     // example usage
-    public static HttpSession getSession() {
+    public HttpSession getSession() {
         ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
         return attr.getRequest().getSession(true); // true == allow create
     }
 
-    public static User getCurrentUser(){
+    public User getCurrentUser(){
         return (User)getSession().getAttribute(Constants.CURRENT_USER);
     }
 
-    public void login(User userToAuth) throws AuthenticationException {
+    public void login(String userName, String pass) throws AuthenticationException {
+        User user = findByUserNameEM(userName);
 
-        User userCredentials = findByUserNameEM(userToAuth.getUserName());
-        if(userCredentials.getPassword().equals(userToAuth.getPassword())){
-            HttpSession session = getSession();
-            session.setAttribute(Constants.CURRENT_USER, userToAuth);
-        } else {
-            throw new AuthenticationException("Invalid username of password");
+        if(user == null || !user.getPassword().equals(pass)){
+            throw new AuthenticationException("Invalid username or password");
         }
+
+        getSession().setAttribute(Constants.CURRENT_USER, user.getId());
     }
 
     public void logout(){
