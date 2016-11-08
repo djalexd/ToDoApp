@@ -1,15 +1,16 @@
-package com.example;
+package com.example.presentation;
 
+import com.example.*;
 import org.apache.http.HttpResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class TaskEndpoint {
@@ -17,29 +18,42 @@ public class TaskEndpoint {
     @Autowired
     private TaskService taskService;
     @Autowired
+    private UserRepository userRepository;
+    @Autowired
     private UserService userService;
+
+    static class AuthenticationException extends Exception {}
+
+    // exception handler (separate class)
+    // handler method
 
     // param1=value1&param2=value2&param3=value3
 
     // <form>
     //   <textbox name=param1>
     // </form>
+    //@SomeSecurity("onlyRunIfAuthenticated") // throw Exception if there is no logged in user, otherwise continue
     @RequestMapping(path = "/create-task", method = RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
     public void doCreateTask(
-            final @RequestParam(value = "message") String contents,
-            HttpServletResponse response) throws Exception {
-
-        User currentUser = UserService.getCurrentUser();
-        if(currentUser == null){
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+             final @RequestParam(value = "message") String content,
+             final @SessionAttribute("CURRENT_USER") Optional<Long> loggedInUserId,
+             HttpServletResponse response) throws Exception {
+        // Authentication
+        if (!loggedInUserId.isPresent()) {
+            // Should I really have thrown an Exception, or I could have just set the Suitable HTTP Status and return?
+            throw new AuthenticationException();
         }
+        User currentUser = loggedInUserId
+                 .map(id -> userRepository.findOne(id))
+                 .orElseThrow(() -> new RuntimeException("No such user exists anymore!")); // why not the same AuthenticationException?
+        // Should I really have thrown an Exception, or I could have just set the Suitable HTTP Status and return?
+        // authorization - at some point in the future, here the necessary role will be checked
 
-        Task task = new Task();
-        task.setMessage(contents);
-        task.setAuthor(currentUser);
-        // default assignment
-        task.setAssignee(currentUser);
-        taskService.create(task);
+        // WHAT IF CURRENT USER GETS DELETED HERE?(the create method will fail I assume) - could use a tx(@Transactional(Transactional.TxType.REQUIRES_NEW))!(any benefit here?)
+
+        // service call
+        taskService.create(currentUser.getId(), content);
 
         response.setStatus(HttpServletResponse.SC_CREATED);
     }
@@ -48,7 +62,18 @@ public class TaskEndpoint {
     public void doAssignTask(
             final @RequestParam(value = "toUserName") String toUser,
             final @RequestParam(value = "taskID") Long taskId,
-            HttpServletResponse response){
+            HttpServletResponse response,
+            @SessionAttribute(Constants.CURRENT_USER) Optional<Long> loggedInUserId) throws Exception {
+
+        if(!loggedInUserId.isPresent()){
+            throw new AuthenticationException();
+        }
+        User currentUser = loggedInUserId
+                .map(id -> userRepository.findOne(id))
+                .orElseThrow(() -> new RuntimeException("No such user exists anymore!"));
+        // authorization - none
+
+
 
         Task task = taskService.getTaskById(taskId); // get task by id
         if(task == null){
@@ -63,7 +88,7 @@ public class TaskEndpoint {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-        User currentUser = UserService.getCurrentUser();
+        currentUser = userService.getCurrentUser();
         if(currentUser == null || !currentUser.equals(task.getAuthor()) || !currentUser.equals(task.getAssignee())){
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
@@ -87,7 +112,7 @@ public class TaskEndpoint {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-        User currentUser = UserService.getCurrentUser();
+        User currentUser = userService.getCurrentUser();
         if(currentUser == null || !currentUser.equals(task.getAuthor()) || !currentUser.equals(task.getAssignee())){
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
@@ -110,7 +135,7 @@ public class TaskEndpoint {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-        User currentUser = UserService.getCurrentUser();
+        User currentUser = userService.getCurrentUser();
         if(currentUser == null || !currentUser.equals(task.getAuthor())){
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;

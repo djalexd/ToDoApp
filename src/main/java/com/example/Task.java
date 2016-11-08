@@ -9,7 +9,7 @@ import javax.persistence.*;
  */
 @Data
 @Entity
-class Task {
+public class Task {
     @Id
     @GeneratedValue
     private long id;
