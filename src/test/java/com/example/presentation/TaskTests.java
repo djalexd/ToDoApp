@@ -4,25 +4,16 @@ import com.example.domain.Task;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.web.client.RestOperations;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 @Ignore
-@RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-public class TaskTests {
-
-    private static RestOperations ops = new RestTemplate();
+public class TaskTests extends RESTTests {
 
     // 1st test - create new task over HTTP
     @Test
@@ -31,7 +22,7 @@ public class TaskTests {
         // Get result
         LinkedMultiValueMap<String, Object> map = new LinkedMultiValueMap<>();
         map.add("message", "first task ever!");
-        ResponseEntity<String> response = ops.postForEntity("http://localhost:8080/create-task", map, String.class);
+        ResponseEntity<String> response = ops.postForEntity("http://localhost:{port}/create-task", map, String.class, serverPort);
 
         // HTTP 201 CREATED
         Assert.assertEquals(201, response.getStatusCodeValue());
@@ -48,7 +39,7 @@ public class TaskTests {
         ops.postForEntity("http://localhost:8080/create-task", map0, String.class);
 
         // Get result
-        ResponseEntity<ListOfTasks> response = ops.getForEntity("http://localhost:8080/list-tasks", ListOfTasks.class);
+        ResponseEntity<ListOfTasks> response = ops.getForEntity("http://localhost:{port}/list-tasks", ListOfTasks.class, serverPort);
 
         // - Response is JSON
         MediaType contentType = response.getHeaders().getContentType();
