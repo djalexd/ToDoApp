@@ -1,20 +1,17 @@
-package com.example;
+package com.example.presentation;
 
+import com.example.UserService;
+import com.example.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.condition.MediaTypeExpression;
 
 import javax.servlet.http.HttpServletResponse;
-import java.security.Principal;
 import java.util.List;
 
-/**
- * Created by alexpeptan on 23/10/16.
- */
 @RestController
 public class UserEndpoint {
     @Autowired
