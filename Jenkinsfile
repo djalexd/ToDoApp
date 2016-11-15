@@ -1,8 +1,12 @@
 node {
    def mvnHome
+   def dockerName
+   def dockerRemote
    stage('Preparation') {
       git 'https://github.com/djalexd/ToDoApp.git'
       mvnHome = tool 'Maven3'
+      dockerName = 'todo-app'
+      dockerRemote = 'DOCKER_HOST=tcp://192.168.50.10:2375'
    }
    stage('Build') {
       sh "'${mvnHome}/bin/mvn' -B -Dmaven.test.failure.ignore clean package"
@@ -16,5 +20,14 @@ node {
    stage('Checkstyle') {
       sh "'${mvnHome}/bin/mvn' -B -Dmaven.test.failure.ignore -Pcheckstyle clean package"
       step([$class: 'CheckStylePublisher', canComputeNew: false, defaultEncoding: '', healthy: '', pattern: '**/checkstyle-result.xml', unHealthy: ''])
+   }
+   stage('Build Docker image') {
+      sh "${dockerRemote} docker build -t ${dockerName} ."
+   }
+   stage('Deploy to dev') {
+      sh "${dockerRemote} docker run -d --name ${dockerName} ${dockerName}"
+   }
+   stage('Smoke test dev') {
+      sh "echo 'Hello, world'"
    }
 }
