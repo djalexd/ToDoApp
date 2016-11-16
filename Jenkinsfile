@@ -1,10 +1,12 @@
 node {
    def mvnHome
+   def dockerHome
    def dockerName
    def dockerRemote
    stage('Preparation') {
       git 'https://github.com/djalexd/ToDoApp.git'
       mvnHome = tool 'Maven3'
+      dockerHome = tool 'docker'
       dockerName = 'todo-app'
       dockerRemote = 'DOCKER_HOST=tcp://192.168.50.10:2375'
    }
@@ -22,10 +24,10 @@ node {
       step([$class: 'CheckStylePublisher', canComputeNew: false, defaultEncoding: '', healthy: '', pattern: '**/checkstyle-result.xml', unHealthy: ''])
    }
    stage('Build Docker image') {
-      sh "${dockerRemote} docker build -t ${dockerName} ."
+      sh "${dockerRemote} '${dockerHome}/bin/docker' build -t ${dockerName} ."
    }
    stage('Deploy to dev') {
-      sh "${dockerRemote} docker run -d --name ${dockerName} ${dockerName}"
+      sh "${dockerRemote} '${dockerHome}/bin/docker' run -d --name ${dockerName} ${dockerName}"
    }
    stage('Smoke test dev') {
       sh "echo 'Hello, world'"
