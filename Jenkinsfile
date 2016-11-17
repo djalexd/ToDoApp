@@ -7,7 +7,7 @@ node {
       git 'https://github.com/djalexd/ToDoApp.git'
       mvnHome = tool 'Maven3'
       dockerName = 'todo-app'
-      dockerRemote = 'DOCKER_HOST=tcp://192.168.50.10:2375'
+      dockerRemote = 'tcp://192.168.50.10:2375'
    }
    stage('Build') {
       sh "'${mvnHome}/bin/mvn' -B -Dmaven.test.failure.ignore clean package"
@@ -33,15 +33,4 @@ node {
         }
       }
    }
-/*   
-   stage('Build Docker image') {
-      sh "${dockerRemote} '${dockerHome}/bin/docker' build -t ${dockerName} ."
-   }
-   stage('Deploy to dev') {
-      sh "${dockerRemote} '${dockerHome}/bin/docker' run -d --name ${dockerName} ${dockerName}"
-   }
-   stage('Smoke test dev') {
-      sh "echo 'Hello, world'"
-   }
-*/
 }
