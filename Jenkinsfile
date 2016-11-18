@@ -29,12 +29,7 @@ node {
    }
    stage('Deploy to dev') {
       withDockerServer([uri: dockerRemote]) {
-        try {
-          sh "docker stop `(docker ps -f ancestor=${dockerName}:latest --format='{{.ID}}')`"
-          // Ignore the error for now!
-        } finally {
-          sh "docker run -d ${dockerName}:latest"
-        }
+        sh "./src/main/scripts/stop-start-runtime-v1.sh ${dockerName}"
       }
    }
 }
