@@ -29,8 +29,12 @@ node {
    }
    stage('Deploy to dev') {
       withDockerServer([uri: dockerRemote]) {
-        sh "docker stop `(docker ps -f ancestor=${dockerName}:latest --format='{{.ID}}')`"
-        sh "docker run -d ${dockerName}:latest"
+        try {
+          sh "docker stop `(docker ps -f ancestor=${dockerName}:latest --format='{{.ID}}')`"
+          // Ignore the error for now!
+        } finally {
+          sh "docker run -d ${dockerName}:latest"
+        }
       }
    }
 }
