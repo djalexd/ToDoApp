@@ -29,8 +29,8 @@ node {
    }
    stage('Deploy to dev') {
       withDockerServer([uri: dockerRemote]) {
-        docker.image(dockerName).withRun('') { c -> 
-        }
+        sh "docker stop `(docker docker ps -f ancestor=${dockerName}:latest --format=\"{{.ID}}\")"
+        sh "docker run -d ${dockerName}:latest"
       }
    }
 }

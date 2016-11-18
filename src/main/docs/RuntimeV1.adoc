@@ -1,0 +1,15 @@
+First version is an extremely simple Docker setup:
+--
+* a single Docker host per environment
+* Jenkins stops and runs the application 
+  (this means downtime)
+* there is no load balancing
+* application is accessed by docker host IP 
+  (consequence of no load balancing)
+* application does not persist any data because DB
+  is being embedded along with the application. Also,
+  there is no data migration
+
+Based on list above, we are essentially defining 
+an _ephemeral environment_, that has no state and can be
+removed anytime.
