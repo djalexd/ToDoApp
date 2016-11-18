@@ -29,7 +29,7 @@ node {
    }
    stage('Deploy to dev') {
       withDockerServer([uri: dockerRemote]) {
-        sh "docker stop `(docker docker ps -f ancestor=${dockerName}:latest --format='{{.ID}}')`"
+        sh "docker stop `(docker ps -f ancestor=${dockerName}:latest --format='{{.ID}}')`"
         sh "docker run -d ${dockerName}:latest"
       }
    }
