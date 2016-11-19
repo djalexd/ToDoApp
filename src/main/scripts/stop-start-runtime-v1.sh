@@ -18,5 +18,5 @@ else
   echo "No container needs to be stopped"
 fi
 
-ID=`(docker run -d -P ${APP_NAME}:latest)`
+ID=`(docker run -d -P --memory '300m' ${APP_NAME}:latest)`
 echo "Running container ${APP_NAME}:latest with id=${ID}"
