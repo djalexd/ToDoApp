@@ -1,16 +1,20 @@
 package com.example;
 
 
+import com.example.domain.Task;
+import com.example.domain.User;
+import com.example.domain.vo.TaskVO;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -31,6 +35,7 @@ public class TaskServiceTest {
     private AuthenticationManager authentication;
 
     private User existingUser;
+	private Task existingTask;
 
     @Before
     public void createUserBeforeEachTest() {
@@ -40,58 +45,55 @@ public class TaskServiceTest {
         // TODO check these suggestions, which one fits :)
         // userService.create(String username, String password): User
         // userService.create(UserDTO user): User
+
+	    // Create task
+	    TaskVO vo = TaskVO.builder().message("Sample").build();
+	    existingTask = SecurityContext.executeInUserContext(existingUser, u -> service.create(vo));
     }
 
-    @Test(expected = Exception.class)
+    @Test(expected = AccessDeniedException.class)
     public void shouldNotBeAbleToDeleteTaskWhenAnonymous() throws Exception {
-        // Create task
-        Task task = service.create(existingUser.getId(), "Sample");
         // Delete task
         try {
-            SecurityContextHolder.getContext().setAuthentication(new AnonymousAuthenticationToken("(anon)", "(anon)", Collections.emptyList()));
+            SecurityContextHolder.getContext().setAuthentication(new AnonymousAuthenticationToken("(anon)", "(anon)", Collections.singletonList(new SimpleGrantedAuthority("(anon)"))));
             /* action */
-            service.delete(task.getId());
+            service.delete(existingTask.getId());
             /* action */
-        } catch (Exception e) {
+        } catch (AccessDeniedException e) {
             // Check if task still exists
-            Assert.assertNotNull(service.getTaskById(task.getId()));
+            Assert.assertNotNull(service.getTaskById(existingTask.getId()));
             throw e;
         }
     }
 
-
     @Test
     public void shouldDeleteTaskWhenCalledByOwner() throws Exception {
-        // Create task
-        Task task = service.create(existingUser.getId(), "Sample");
         // Delete task
         final UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(existingUser.getUserName(), existingUser.getPassword());
         SecurityContextHolder.getContext().setAuthentication(token);
         /* action */
-        service.delete(task.getId());
+        service.delete(existingTask.getId());
         /* action */
 
         // Check if task still exists
-        Assert.assertNull(service.getTaskById(task.getId()));
+        Assert.assertNull(service.getTaskById(existingTask.getId()));
     }
 
 
-    @Test(expected = Exception.class)
+    @Test(expected = AccessDeniedException.class)
     public void shouldNotDeleteTaskWhenCalledBySomeOneElseThanOwner() throws Exception {
-        // Create task
-        Task task = service.create(existingUser.getId(), "Sample");
         // Delete task
         User badBoy = new User("alex badBoy", "adelina");
         userService.create(badBoy);
         try {
-            final UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(badBoy, "(password)");
+            final UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(badBoy.getUserName(), badBoy.getPassword());
             SecurityContextHolder.getContext().setAuthentication(token);
             /* action */
-            service.delete(task.getId());
+            service.delete(existingTask.getId());
             /* action */
-        } catch (Exception e) {
+        } catch (AccessDeniedException e) {
             // Check if task still exists
-            Assert.assertNotNull(service.getTaskById(task.getId()));
+            Assert.assertNotNull(service.getTaskById(existingTask.getId()));
             throw e;
         }
     }

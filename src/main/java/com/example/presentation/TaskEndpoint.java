@@ -1,12 +1,13 @@
 package com.example.presentation;
 
 import com.example.*;
-import org.apache.http.HttpResponse;
+import com.example.domain.Task;
+import com.example.domain.User;
+import com.example.domain.vo.TaskVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.util.List;
@@ -37,24 +38,9 @@ public class TaskEndpoint {
     @Transactional(Transactional.TxType.REQUIRES_NEW)
     public void doCreateTask(
              final @RequestParam(value = "message") String content,
-             final @SessionAttribute("CURRENT_USER") Optional<Long> loggedInUserId,
              HttpServletResponse response) throws Exception {
-        // Authentication
-        if (!loggedInUserId.isPresent()) {
-            // Should I really have thrown an Exception, or I could have just set the Suitable HTTP Status and return?
-            throw new AuthenticationException();
-        }
-        User currentUser = loggedInUserId
-                 .map(id -> userRepository.findOne(id))
-                 .orElseThrow(() -> new RuntimeException("No such user exists anymore!")); // why not the same AuthenticationException?
-        // Should I really have thrown an Exception, or I could have just set the Suitable HTTP Status and return?
-        // authorization - at some point in the future, here the necessary role will be checked
-
-        // WHAT IF CURRENT USER GETS DELETED HERE?(the create method will fail I assume) - could use a tx(@Transactional(Transactional.TxType.REQUIRES_NEW))!(any benefit here?)
-
         // service call
-        taskService.create(currentUser.getId(), content);
-
+        taskService.create(TaskVO.builder().message(content).build());
         response.setStatus(HttpServletResponse.SC_CREATED);
     }
 
@@ -95,7 +81,7 @@ public class TaskEndpoint {
         }
 
         task.setAssignee(assigneeCandidate);
-        taskService.update(taskId, task);
+        taskService.update(taskId, TaskVO.builder().assigneeId(assigneeCandidate.getId()).build());
 
         response.setStatus(HttpServletResponse.SC_OK);
     }
@@ -119,7 +105,7 @@ public class TaskEndpoint {
         }
 
         task.setMessage(newMessage);
-        taskService.update(taskId, task);
+        taskService.update(taskId, TaskVO.builder().message(newMessage).build());
 
         response.setStatus(HttpServletResponse.SC_OK);
     }

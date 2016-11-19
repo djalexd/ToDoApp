@@ -1,6 +1,6 @@
 package com.example;
 
-import lombok.Data;
+import com.example.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -11,7 +11,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.servlet.http.HttpSession;
 import java.util.List;
-import java.util.jar.Pack200;
 
 /**
  * Manages the lifecycle of users
