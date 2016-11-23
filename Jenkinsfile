@@ -28,7 +28,7 @@ node {
    stage('Build Docker') { 
       withDockerServer([uri: dockerRemote]) {
         def image = docker.build "${dockerName}"
-        image.tag "${commit_id}"
+        image.tag(tagname="${commit_id}", forceTag=false)
       }
    }
    stage('Deploy to dev') {
