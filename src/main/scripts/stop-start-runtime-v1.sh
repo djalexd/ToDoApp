@@ -5,18 +5,25 @@ set +e
 # running and starting a new version.
 
 APP_NAME=${1}
+VERSION=${2}
 if [ "${APP_NAME}" == "" ]; then
- echo 'Usage: ./stop-start-runtime-v1.sh {app_name}'
+ echo 'Usage: ./stop-start-runtime-v1.sh {app_name} {version}'
  exit 1
 fi
 
-ID=`(docker ps -f ancestor=${APP_NAME}:latest --format='{{.ID}}')`
+if [ "${VERSION}" == "" ]; then
+  echo 'Usage ./stop-start-runtime-v1.sh {app_name} {version}'
+  exit 1
+fi
+
+ID=`(docker ps -f name=${APP_NAME} --format='{{.ID}}')`
 if [ -n "${ID}" ]; then
   echo "Attempting to stop container with ID=${ID}"
   docker stop ${ID}
+  docker rm ${ID}
 else
   echo "No container needs to be stopped"
 fi
 
-ID=`(docker run -d -P --memory '300m' ${APP_NAME}:latest)`
-echo "Running container ${APP_NAME}:latest with id=${ID}"
+ID=`(docker run -d -P --memory '300m' --name ${APP_NAME} ${APP_NAME}:${VERSION})`
+echo "Running container ${APP_NAME}:${VERSION} with id=${ID}"

@@ -3,11 +3,14 @@ node {
    def dockerHome
    def dockerName
    def dockerRemote
+   def commit_id
    stage('Preparation') {
       git 'https://github.com/djalexd/ToDoApp.git'
       mvnHome = tool 'Maven3'
       dockerName = 'todo-app'
       dockerRemote = 'tcp://192.168.50.10:2375'
+      sh "git rev-parse --short HEAD > .git/commit-id"                        
+      commit_id = readFile('.git/commit-id')
    }
    stage('Build') {
       sh "'${mvnHome}/bin/mvn' -B -Dmaven.test.failure.ignore clean package"
@@ -24,7 +27,7 @@ node {
    }
    stage('Build Docker') { 
       withDockerServer([uri: dockerRemote]) {
-        docker.build(dockerName)
+        docker.build "${dockerName}:${commit_id}"
       }
    }
    stage('Deploy to dev') {
