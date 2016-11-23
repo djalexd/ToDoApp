@@ -28,12 +28,14 @@ node {
    stage('Build Docker') { 
       withDockerServer([uri: dockerRemote]) {
         def image = docker.build "${dockerName}"
-        image.tag(tagname="${commit_id}", forceTag=false)
+        sh "docker tag ${dockerName} ${dockerName}:${commit_id}"
+        // Image tagging does not work with docker remote API 1.12 (--force parameter was completely removed). 
+        // image.tag(tagName = "${commit_id}", force = false)
       }
    }
    stage('Deploy to dev') {
       withDockerServer([uri: dockerRemote]) {
-        sh "./src/main/scripts/stop-start-runtime-v1.sh ${dockerName}"
+        sh "./src/main/scripts/stop-start-runtime-v1.sh ${dockerName} ${commit_id}"
       }
    }
 }
