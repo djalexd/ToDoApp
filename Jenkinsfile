@@ -8,7 +8,7 @@ node {
       git 'https://github.com/djalexd/ToDoApp.git'
       mvnHome = tool 'Maven3'
       dockerName = 'todo-app'
-      dockerRemote = '${env.dockerRemote}'
+      dockerRemote = env.dockerRemote
       sh "git rev-parse --short HEAD > .git/commit-id"                        
       commit_id = readFile('.git/commit-id')
    }
