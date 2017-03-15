@@ -8,7 +8,7 @@ node {
       git 'https://github.com/djalexd/ToDoApp.git'
       mvnHome = tool 'Maven3'
       dockerName = 'todo-app'
-      dockerRemote = 'tcp://192.168.50.10:2375'
+      dockerRemote = '${env.dockerRemote}'
       sh "git rev-parse --short HEAD > .git/commit-id"                        
       commit_id = readFile('.git/commit-id')
    }
@@ -31,6 +31,14 @@ node {
         sh "docker tag ${dockerName} ${dockerName}:${commit_id}"
         // Image tagging does not work with docker remote API 1.12 (--force parameter was completely removed). 
         // image.tag(tagName = "${commit_id}", force = false)
+      }
+   }
+   stage('Deploy to Docker registry') {
+      if (env.dockerRegistry != null && env.dockerRegistry.length() > 0) {
+         sh "docker tag ${dockerName} ${env.dockerRegistry}/${dockerName}:${commit_id}"
+         sh "docker push"
+      } else {
+         echo "Skipping stage, no dockerRegistry defined in Jenkins env"
       }
    }
    stage('Deploy to dev') {
